@@ -29,12 +29,12 @@ import useModalStore from '@/stores/modal';
 export default {
   name: 'AppHeader',
   computed: {
-    // mapuje się po wszystkich wartościach tu np Store  i po . uzyskuje się wartość do danego parametru 
+    // mapuje się po wszystkich wartościach tu np Store  i po . uzyskuje się wartość do danego parametru
     ...mapStores(useModalStore),
   },
   methods: {
     toggleAuthModal() {
-        //  w this.modalStore ( modal jest to nazwa ta sama co w plikus store defineStore("modal"....))
+      //  w this.modalStore ( modal jest to nazwa ta sama co w plikus store defineStore("modal"....))
       this.modalStore.isOpen = !this.modalStore.isOpen;
     },
   },

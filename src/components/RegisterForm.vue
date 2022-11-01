@@ -96,6 +96,9 @@
 </template>
 
 <script>
+import {auth, userCollection} from '../includes/firebase';
+import {createUserWithEmailAndPassword} from 'firebase/auth';
+import {addDoc} from 'firebase/firestore';
 export default {
   name: 'RegisterForm',
   data() {
@@ -104,7 +107,7 @@ export default {
         name: 'required|min:3|max:100|alphaSpaces',
         email: 'required|email',
         age: 'required|minVal:18|maxVal:120',
-        password: 'required|min:9|max:100|excluded:password',
+        password: 'required|min:6|max:100|excluded:password',
         confirm_password: 'passwordMismatch:@password',
         country: 'required|countryExcluded:Antarctica',
         tos: 'tos',
@@ -120,16 +123,42 @@ export default {
     };
   },
   methods: {
-    register(values) {
+    async register(values) {
       (this.regShowAlert = true), (this.regInSubmission = true);
       this.regAlertVariant = 'bg-blue-500';
       this.regAlertMsg = 'Please wait! Your account is being created.';
 
-      setTimeout(() => {
-        this.regAlertVariant = 'bg-green-500';
-        this.regAlertMsg = 'Success! Your account has been created.';
-        console.log(values);
-      }, 3000);
+      try {
+        await createUserWithEmailAndPassword(
+          auth,
+          values.email,
+          values.password
+        );
+      } catch (err) {
+        this.regInSubmission = false;
+        this.regAlertVariant = 'bg-red-500';
+        this.regAlertMsg =
+          'An unexpected error occurred. Please try again late';
+        return;
+      }
+
+      try {
+        await addDoc(userCollection, {
+          name: values.name,
+          email: values.email,
+          age: values.age,
+          country: values.country,
+        });
+      } catch (err) {
+        this.regInSubmission = false;
+        this.regAlertVariant = 'bg-red-500';
+        this.regAlertMsg =
+          'An unexpected error occurred. Please try again late';
+        return;
+      }
+
+      this.regAlertVariant = 'bg-green-500';
+      this.regAlertMsg = 'Success! Your account has been created.';
     },
   },
 };
