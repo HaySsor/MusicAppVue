@@ -36,13 +36,16 @@
 </template>
 
 <script>
+import {mapActions} from 'pinia';
+import useUserStore from '@/stores/user';
+
 export default {
   name: 'LoginForm',
   data() {
     return {
       loginSchema: {
         email: 'required|email',
-        password: 'required|min:9|max:100',
+        password: 'required|min:6|max:100',
       },
       loginInSubmission: false,
       loginShowAlert: false,
@@ -51,17 +54,27 @@ export default {
     };
   },
   methods: {
-    login(values) {
+    ...mapActions(useUserStore, {
+      loginUser: 'login',
+    }),
+    async login(values) {
       this.loginShowAlert = true;
       this.loginInSubmission = true;
       this.loginAlertVariant = 'bg-blue-500';
       this.loginAlertMsg = 'Please wait! We are logging you in.';
 
-      setTimeout(() => {
-        this.loginAlertVariant = 'bg-green-500';
-        this.loginAlertMsg = 'Success! Your login';
-        console.log(values);
-      }, 3000);
+      try {
+        await this.loginUser(values);
+      } catch (err) {
+        this.loginInSubmission = false;
+        this.loginAlertVariant = 'bg-red-500';
+        this.loginAlertMsg = 'Invalid login details';
+        return;
+      }
+
+      this.loginAlertVariant = 'bg-green-500';
+      this.loginAlertMsg = 'Success! Your login';
+      window.location.reload();
     },
   },
 };
