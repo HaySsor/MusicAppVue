@@ -3,6 +3,7 @@
     <div v-show="!showForm">
       <h4 class="inline-block text-2xl font-bold">{{ song.modifiedName }}</h4>
       <button
+        @click.prevent="delateSong"
         class="ml-1 py-1 px-2 text-sm rounded text-white bg-red-600 float-right">
         <i class="fa fa-times"></i>
       </button>
@@ -26,6 +27,7 @@
         <div class="mb-3">
           <label class="inline-block mb-2">Song Title</label>
           <VeeField
+            @input="updateUnsavedFlag(true)"
             name="modifiedName"
             type="text"
             class="block w-full py-1.5 px-3 text-gray-800 border border-gray-300 transition duration-500 focus:outline-none focus:border-black rounded"
@@ -35,6 +37,7 @@
         <div class="mb-3">
           <label class="inline-block mb-2">Genre</label>
           <VeeField
+            @input="updateUnsavedFlag(true)"
             name="genre"
             type="text"
             class="block w-full py-1.5 px-3 text-gray-800 border border-gray-300 transition duration-500 focus:outline-none focus:border-black rounded"
@@ -60,7 +63,9 @@
 </template>
 
 <script>
-import {getFirestore, doc, updateDoc} from 'firebase/firestore';
+import {storage} from '../includes/firebase';
+import {getFirestore, doc, updateDoc, deleteDoc} from 'firebase/firestore';
+import {ref, deleteObject} from 'firebase/storage';
 
 const db = getFirestore();
 
@@ -78,6 +83,13 @@ export default {
     index: {
       type: Number,
       required: true,
+    },
+    removeSong: {
+      type: Function,
+      required: true,
+    },
+    updateUnsavedFlag: {
+      type: Function,
     },
   },
   data() {
@@ -114,10 +126,19 @@ export default {
         return;
       }
       this.updateSong(this.index, values);
+      this.updateUnsavedFlag(false)
 
       this.inSubmission = false;
       this.alertVariant = 'bg-green-500';
       this.alertMessage = 'Success';
+    },
+    async delateSong() {
+      const songRef = ref(storage, `songs/${this.song.originalName}`);
+
+      await deleteObject(songRef);
+
+      await deleteDoc(doc(db, 'songs', this.song.docID));
+      this.removeSong(this.index);
     },
   },
 };

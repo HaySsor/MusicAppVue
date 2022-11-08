@@ -2,7 +2,7 @@
   <!-- Main Content -->
   <section class="container mx-auto mt-6">
     <div class="md:grid md:grid-cols-3 md:gap-4">
-      <AppUpload />
+      <AppUpload :addSong="addSong" />
       <!-- add ref='upload' to AppUploads to work with beforeRouteLeave -->
       <div class="col-span-2">
         <div
@@ -19,7 +19,9 @@
               :key="song.docID"
               :song="song"
               :updateSong="updateSongs"
-              :index="i" />
+              :index="i"
+              :removeSong="removeSong"
+              :updateUnsavedFlag="updateUnsavedFlag" />
           </div>
         </div>
       </div>
@@ -47,25 +49,42 @@ export default {
   data() {
     return {
       songs: [],
+      unsavedFlag: false,
     };
   },
   async created() {
     const q = query(songsCollection, where('uid', '==', auth.currentUser.uid));
     const querySnapshot = await getDocs(q);
 
-    querySnapshot.forEach((doc) => {
-      const song = {
-        ...doc.data(),
-        docID: doc.id,
-      };
-      this.songs.push(song);
-    });
+    querySnapshot.forEach(this.addSong);
   },
   methods: {
     updateSongs(i, values) {
       this.songs[i].modifiedName = values.modifiedName;
       this.songs[i].genre = values.genre;
     },
+    removeSong(index) {
+      this.songs.splice(index, 1);
+    },
+    addSong(document) {
+      const song = {
+        ...document.data(),
+        docID: document.id,
+      };
+
+      this.songs.push(song);
+    },
+    updateUnsavedFlag(value) {
+      this.unsavedFlag = value;
+    },
+  },
+  beforeRouteLeave(to, from, next) {
+    if(!this.unsavedFlag){
+      next()
+    }else{
+      const leave = confirm('You have unsaved changes. Are you sure you want to leave ?')
+      next(leave)
+    }
   },
   // beforeRouteLeave(to,from,next){
   //   this.$refs.upload.cancelUploads()

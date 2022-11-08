@@ -43,7 +43,7 @@
 <script>
 import {storage, auth} from '@/includes/firebase';
 import {ref, uploadBytesResumable, getDownloadURL} from 'firebase/storage';
-import {addDoc, collection, getFirestore} from 'firebase/firestore';
+import {addDoc, collection, getFirestore, getDoc} from 'firebase/firestore';
 
 const db = getFirestore();
 
@@ -55,11 +55,19 @@ export default {
       uploads: [],
     };
   },
+  props: {
+    addSong: {
+      type: Function,
+      request: true,
+    },
+  },
   methods: {
     upload(event) {
       this.isDragOver = false;
-      
-      const files = event.dataTransfer ? [...event.dataTransfer.files] :[...event.target.files]
+
+      const files = event.dataTransfer
+        ? [...event.dataTransfer.files]
+        : [...event.target.files];
 
       files.forEach((file) => {
         if (file.type !== 'audio/mpeg') {
@@ -103,7 +111,9 @@ export default {
             };
 
             song.url = await getDownloadURL(uploadTask.snapshot.ref);
-            await addDoc(collection(db, 'songs'), song);
+            const songRaf = await addDoc(collection(db, 'songs'), song);
+            const songSnapshot = await getDoc(songRaf);
+            this.addSong(songSnapshot);
 
             this.uploads[uploadIndex].variant = 'bg-green-400';
             this.uploads[uploadIndex].icon = 'fas fa-check';
@@ -117,12 +127,12 @@ export default {
     //   upload.task.cancel()
     // })
     // }
-    //this function is called when we use beforeRouteLeave in parent component 
+    //this function is called when we use beforeRouteLeave in parent component
   },
-  beforeUnmount(){
-    this.uploads.forEach(upload =>{
-      upload.task.cancel()
-    })
-  }
+  beforeUnmount() {
+    this.uploads.forEach((upload) => {
+      upload.task.cancel();
+    });
+  },
 };
 </script>
