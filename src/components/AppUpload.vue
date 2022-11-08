@@ -15,36 +15,24 @@
           @dragenter.prevent.stop="isDragOver = true"
           @dragleave.prevent.stop="isDragOver = false"
           @dragexit.prevent.stop="isDragOver = false"
-          @drop.prevent.stop="upload"
+          @drop.prevent.stop="upload($event)"
           class="w-full px-10 py-20 rounded text-center cursor-pointer border border-dashed border-gray-400 text-gray-400 transition duration-500 hover:text-white hover:bg-green-400 hover:border-green-400 hover:border-solid">
           <h5>Drop your files here</h5>
         </div>
+        <input type="file" multiple @change="upload($event)" />
         <hr class="my-6" />
-        <!-- Progess Bars -->
-        <div class="mb-4">
+        <!-- Progress Bars -->
+        <div class="mb-4" v-for="upload in uploads" :key="upload.name">
           <!-- File Name -->
-          <div class="font-bold text-sm">Just another song.mp3</div>
+          <div class="font-bold text-sm" :class="upload.textClass">
+            <i :class="upload.icon"></i> {{ upload.name }}
+          </div>
           <div class="flex h-4 overflow-hidden bg-gray-200 rounded">
             <!-- Inner Progress Bar -->
             <div
-              class="transition-all progress-bar bg-blue-400"
-              style="width: 75%"></div>
-          </div>
-        </div>
-        <div class="mb-4">
-          <div class="font-bold text-sm">Just another song.mp3</div>
-          <div class="flex h-4 overflow-hidden bg-gray-200 rounded">
-            <div
-              class="transition-all progress-bar bg-blue-400"
-              style="width: 35%"></div>
-          </div>
-        </div>
-        <div class="mb-4">
-          <div class="font-bold text-sm">Just another song.mp3</div>
-          <div class="flex h-4 overflow-hidden bg-gray-200 rounded">
-            <div
-              class="transition-all progress-bar bg-blue-400"
-              style="width: 55%"></div>
+              class="transition-all progress-bar"
+              :class="upload.variant"
+              :style="{width: upload.currentProgress + '%'}"></div>
           </div>
         </div>
       </div>
@@ -53,17 +41,88 @@
 </template>
 
 <script>
+import {storage, auth} from '@/includes/firebase';
+import {ref, uploadBytesResumable, getDownloadURL} from 'firebase/storage';
+import {addDoc, collection, getFirestore} from 'firebase/firestore';
+
+const db = getFirestore();
+
 export default {
   name: 'AppUpload',
   data() {
     return {
       isDragOver: false,
+      uploads: [],
     };
   },
   methods: {
-    upload() {
+    upload(event) {
       this.isDragOver = false;
+      
+      const files = event.dataTransfer ? [...event.dataTransfer.files] :[...event.target.files]
+
+      files.forEach((file) => {
+        if (file.type !== 'audio/mpeg') {
+          return;
+        }
+
+        const storageRef = ref(storage, `songs/${file.name}`); //"muisc-892a5.appspot.com/songs/example.mp3" in firebase.js
+        const uploadTask = uploadBytesResumable(storageRef, file);
+
+        const uploadIndex =
+          this.uploads.push({
+            task: uploadTask,
+            currentProgress: 0,
+            name: file.name,
+            variant: 'bg-blue-400',
+            icon: 'fas fa-spinner fa-spin',
+            textClass: '',
+          }) - 1;
+
+        uploadTask.on(
+          'state_changed',
+          (snapshot) => {
+            const progress =
+              (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+            this.uploads[uploadIndex].currentProgress = progress;
+          },
+          (error) => {
+            this.uploads[uploadIndex].variant = 'bg-red-400';
+            this.uploads[uploadIndex].icon = 'fas fa-times';
+            this.uploads[uploadIndex].textClass = 'text-red-400';
+            console.log(error);
+          },
+          async () => {
+            const song = {
+              uid: auth.currentUser.uid,
+              displayName: auth.currentUser.displayName,
+              originalName: uploadTask.snapshot.ref.name,
+              modifiedName: uploadTask.snapshot.ref.name,
+              genre: '',
+              commentCount: 0,
+            };
+
+            song.url = await getDownloadURL(uploadTask.snapshot.ref);
+            await addDoc(collection(db, 'songs'), song);
+
+            this.uploads[uploadIndex].variant = 'bg-green-400';
+            this.uploads[uploadIndex].icon = 'fas fa-check';
+            this.uploads[uploadIndex].textClass = 'text-green-400';
+          }
+        );
+      });
     },
+    // cancelUploads(){
+    //   this.uploads.forEach(upload =>{
+    //   upload.task.cancel()
+    // })
+    // }
+    //this function is called when we use beforeRouteLeave in parent component 
   },
+  beforeUnmount(){
+    this.uploads.forEach(upload =>{
+      upload.task.cancel()
+    })
+  }
 };
 </script>
