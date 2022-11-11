@@ -58,7 +58,7 @@ export default {
   props: {
     addSong: {
       type: Function,
-      request: true,
+      required: true
     },
   },
   methods: {

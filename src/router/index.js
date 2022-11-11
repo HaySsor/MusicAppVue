@@ -3,6 +3,7 @@ import Home from '../views/HomeView.vue'
 import About from '../views/AboutView.vue'
 import Manage from '../views/ManageView.vue'
 import useUserStore from '../stores/user'
+import Song from '../views/SongView.vue'
 
 const routes = [
   {
@@ -32,6 +33,11 @@ const routes = [
   {
     path: '/manage',
     redirect: { name: 'manage' },
+  },
+  {
+    name: "song",
+    path: '/song/:id',
+    component: Song,
   },
   {
     path: '/:catchAll(.*)*',
