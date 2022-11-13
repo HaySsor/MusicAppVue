@@ -24,11 +24,6 @@ const routes = [
     meta: {
       requiresAuth: true,
     },
-    beforeEnter: (to, from, next) => {
-      console.log('manage Router Guard')
-
-      next()
-    },
   },
   {
     path: '/manage',
