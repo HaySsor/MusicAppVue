@@ -33,7 +33,10 @@
           :class="commentAlertVariant">
           {{ commentAlertMessage }}
         </div>
-        <VeeForm :validation-schema="schema" @submit="addComment" v-if="userLoggedIn">
+        <VeeForm
+          :validation-schema="schema"
+          @submit="addComment"
+          v-if="userLoggedIn">
           <VeeField
             as="textarea"
             name="comment"
@@ -49,7 +52,8 @@
         </VeeForm>
         <!-- Sort Comments -->
         <select
-          class="block mt-4 py-1.5 px-3 text-gray-800 border border-gray-300 transition duration-500 focus:outline-none focus:border-black rounded">
+          class="block mt-4 py-1.5 px-3 text-gray-800 border border-gray-300 transition duration-500 focus:outline-none focus:border-black rounded"
+          v-model="sort">
           <option value="1">Latest</option>
           <option value="2">Oldest</option>
         </select>
@@ -58,76 +62,18 @@
   </section>
   <!-- Comments -->
   <ul class="container mx-auto">
-    <li class="p-6 bg-gray-50 border border-gray-200">
+    <li
+      class="p-6 bg-gray-50 border border-gray-200"
+      v-for="comment in sortedComments"
+      :key="comment.docID">
       <!-- Comment Author -->
       <div class="mb-5">
-        <div class="font-bold">Elaine Dreyfuss</div>
-        <time>5 mins ago</time>
+        <div class="font-bold">{{ comment.name }}</div>
+        <time>{{ comment.datePosted }}</time>
       </div>
 
       <p>
-        Sed ut perspiciatis unde omnis iste natus error sit voluptatem
-        accusantium der doloremque laudantium.
-      </p>
-    </li>
-    <li class="p-6 bg-gray-50 border border-gray-200">
-      <!-- Comment Author -->
-      <div class="mb-5">
-        <div class="font-bold">Elaine Dreyfuss</div>
-        <time>5 mins ago</time>
-      </div>
-
-      <p>
-        Sed ut perspiciatis unde omnis iste natus error sit voluptatem
-        accusantium der doloremque laudantium.
-      </p>
-    </li>
-    <li class="p-6 bg-gray-50 border border-gray-200">
-      <!-- Comment Author -->
-      <div class="mb-5">
-        <div class="font-bold">Elaine Dreyfuss</div>
-        <time>5 mins ago</time>
-      </div>
-
-      <p>
-        Sed ut perspiciatis unde omnis iste natus error sit voluptatem
-        accusantium der doloremque laudantium.
-      </p>
-    </li>
-    <li class="p-6 bg-gray-50 border border-gray-200">
-      <!-- Comment Author -->
-      <div class="mb-5">
-        <div class="font-bold">Elaine Dreyfuss</div>
-        <time>5 mins ago</time>
-      </div>
-
-      <p>
-        Sed ut perspiciatis unde omnis iste natus error sit voluptatem
-        accusantium der doloremque laudantium.
-      </p>
-    </li>
-    <li class="p-6 bg-gray-50 border border-gray-200">
-      <!-- Comment Author -->
-      <div class="mb-5">
-        <div class="font-bold">Elaine Dreyfuss</div>
-        <time>5 mins ago</time>
-      </div>
-
-      <p>
-        Sed ut perspiciatis unde omnis iste natus error sit voluptatem
-        accusantium der doloremque laudantium.
-      </p>
-    </li>
-    <li class="p-6 bg-gray-50 border border-gray-200">
-      <!-- Comment Author -->
-      <div class="mb-5">
-        <div class="font-bold">Elaine Dreyfuss</div>
-        <time>5 mins ago</time>
-      </div>
-
-      <p>
-        Sed ut perspiciatis unde omnis iste natus error sit voluptatem
-        accusantium der doloremque laudantium.
+        {{ comment.content }}
       </p>
     </li>
   </ul>
@@ -140,6 +86,9 @@ import {
   doc,
   getDoc,
   addDoc,
+  where,
+  query,
+  getDocs,
 } from 'firebase/firestore';
 import {auth} from '../includes/firebase';
 import {mapState} from 'pinia';
@@ -162,10 +111,21 @@ export default {
       commentShowAlert: false,
       commentAlertVariant: 'bg-blue-500',
       commentAlertMessage: 'Please wait! Your comment is being submitted',
+      comments: [],
+      sort: '1',
     };
   },
   computed: {
     ...mapState(useUserStore, ['userLoggedIn']),
+    sortedComments() {
+      return this.comments.slice().sort((a, b) => {
+        if (this.sort === '1') {
+          return new Date(b.datePosted) - new Date(a.datePosted);
+        }
+
+        return new Date(a.datePosted) - new Date(b.datePosted);
+      });
+    },
   },
   async created() {
     const docRef = await doc(songsCollection, this.$route.params.id);
@@ -176,7 +136,12 @@ export default {
       return;
     }
 
+    const { sort } = this.$route.query;
+
+    this.sort = sort ==='1' || sort === '2' ? sort : '1'
+
     this.song = docSnapshot.data();
+    this.getComments();
   },
   methods: {
     async addComment(values, {resetForm}) {
@@ -188,11 +153,14 @@ export default {
       console.log(values);
       const comment = {
         content: values.comment,
-        datePosted: new Date().toString(),
+        datePosted: new Date().toDateString(),
         sid: this.$route.params.id,
         name: auth.currentUser.displayName,
         uid: auth.currentUser.uid,
       };
+
+      this.getComments();
+
       await addDoc(commentsCollection, comment);
       this.commentInSubmission = false;
       this.commentShowAlert = false;
@@ -200,6 +168,35 @@ export default {
       this.commentAlertMessage = 'Comment added!';
 
       resetForm();
+    },
+    async getComments() {
+      const q = query(
+        commentsCollection,
+        where('sid', '==', this.$route.params.id)
+      );
+      const snapshots = await getDocs(q);
+
+      this.comments = [];
+
+      snapshots.forEach((doc) => {
+        console.log(doc);
+        this.comments.push({
+          docID: doc.id,
+          ...doc.data(),
+        });
+      });
+    },
+  },
+  watch: {
+    sort(newVal) {
+      if(newVal === this.$route.query.sort){
+        return 
+      }
+      this.$router.push({
+        query: {
+          sort: newVal,
+        },
+      });
     },
   },
 };
