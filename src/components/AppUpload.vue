@@ -43,9 +43,10 @@
 <script>
 import {storage, auth} from '@/includes/firebase';
 import {ref, uploadBytesResumable, getDownloadURL} from 'firebase/storage';
-import {addDoc, collection, getFirestore, getDoc} from 'firebase/firestore';
+import {addDoc, collection, getFirestore, getDoc,} from 'firebase/firestore';
 
 const db = getFirestore();
+
 
 export default {
   name: 'AppUpload',
@@ -72,6 +73,18 @@ export default {
       files.forEach((file) => {
         if (file.type !== 'audio/mpeg') {
           return;
+        }
+
+        if(!navigator.onLine){
+          this.uploads.push({
+            task:{},
+            currentProgress:100,
+            name:file.name,
+            variant: 'bg-red-400',
+            icon:'fas fa-times',
+            textClass:'text-red-400'
+          })
+          return
         }
 
         const storageRef = ref(storage, `songs/${file.name}`); //"muisc-892a5.appspot.com/songs/example.mp3" in firebase.js

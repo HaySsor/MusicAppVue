@@ -3,6 +3,7 @@ import { getAuth, } from 'firebase/auth';
 import { getStorage } from "firebase/storage";
 
 
+
 const firebaseConfig = {
     apiKey: "AIzaSyCtCgb3_dktwh61FV0pP6Nh3BXpXUPWhaI",
     authDomain: "muisc-892a5.firebaseapp.com",
@@ -10,7 +11,6 @@ const firebaseConfig = {
     storageBucket: "muisc-892a5.appspot.com",
     appId: "1:771021252100:web:875f6c3ce90ac962777751"
 };
-
 
 initializeApp(firebaseConfig)
 

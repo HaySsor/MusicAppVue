@@ -64,10 +64,11 @@
 
 <script>
 import {storage} from '../includes/firebase';
-import {getFirestore, doc, updateDoc, deleteDoc} from 'firebase/firestore';
+import {getFirestore, doc, updateDoc, deleteDoc,} from 'firebase/firestore';
 import {ref, deleteObject} from 'firebase/storage';
 
 const db = getFirestore();
+
 
 export default {
   name: 'CompositionItem',

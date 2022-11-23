@@ -1,0 +1,8 @@
+{
+    "home":{
+        "listen": "Posłuchaj Wspaniałej Muzyki!"
+    },
+    "song":{
+        "comment_count":"Bark komentarzy  | 1 komentarz | {count} komentarzy"
+        }
+}

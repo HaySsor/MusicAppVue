@@ -43,6 +43,7 @@ import {
 } from 'firebase/firestore';
 
 const db = getFirestore();
+
 const songsCollection = collection(db, 'songs');
 
 export default {

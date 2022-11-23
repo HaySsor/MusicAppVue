@@ -17,6 +17,7 @@
           <!-- Song Info -->
           <div class="text-3xl font-bold">{{ song.modifiedName }}</div>
           <div>{{ song.genre }}</div>
+          <div class="song-price">{{ $n(1, 'currency') }}</div>
         </div>
       </div>
     </section>
@@ -26,7 +27,11 @@
         class="bg-white rounded border border-gray-200 relative flex flex-col">
         <div class="px-6 pt-6 pb-5 font-bold border-b border-gray-200">
           <!-- Comment Count -->
-          <span class="card-title">Comments ({{ song.commentCount }})</span>
+          <span class="card-title">{{
+            $tc('song.comment_count', song.comment_count, {
+              count: song.commentCount,
+            })
+          }}</span>
           <i class="fa fa-comments float-right text-green-400 text-2xl"></i>
         </div>
         <div class="p-6">
@@ -94,6 +99,7 @@ import {
   query,
   getDocs,
   updateDoc,
+  
 } from 'firebase/firestore';
 import {auth} from '../includes/firebase';
 import {mapState, mapActions} from 'pinia';
@@ -101,6 +107,7 @@ import useUserStore from '../stores/user.js';
 import usePlayerStore from '../stores/player.js';
 
 const db = getFirestore();
+
 
 const songsCollection = collection(db, 'songs');
 const commentsCollection = collection(db, 'comments');
