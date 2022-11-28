@@ -39,7 +39,7 @@
 
 <script>
 import {mapActions, mapState} from 'pinia';
-import usePlayerStore from '../stores/player';
+import usePlayerStore from '@/stores/player';
 export default {
   name: 'AppPlayer',
 

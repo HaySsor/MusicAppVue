@@ -58,7 +58,7 @@ import {
   getDoc,
  
 } from 'firebase/firestore';
-import IconSecondary from '../directives/icon-secondary';
+import IconSecondary from '@/directives/icon-secondary';
 
 const db = getFirestore();
 

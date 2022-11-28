@@ -99,15 +99,13 @@ import {
   query,
   getDocs,
   updateDoc,
-  
 } from 'firebase/firestore';
-import {auth} from '../includes/firebase';
+import {auth} from '@/includes/firebase';
 import {mapState, mapActions} from 'pinia';
-import useUserStore from '../stores/user.js';
-import usePlayerStore from '../stores/player.js';
+import useUserStore from '@/stores/user.js';
+import usePlayerStore from '@/stores/player.js';
 
 const db = getFirestore();
-
 
 const songsCollection = collection(db, 'songs');
 const commentsCollection = collection(db, 'comments');
@@ -142,23 +140,24 @@ export default {
     },
   },
   async beforeRouteEnter(to, from, next) {
+    console.log(to.params.id);
     const docRef = await doc(songsCollection, to.params.id);
     const docSnapshot = await getDoc(docRef);
+    console.log(docRef);
 
-    next((vm)=>{
+    next((vm) => {
       if (!docSnapshot.exists()) {
-      vm.$router.push({name: 'home'});
-      return;
-    }
+        vm.$router.push({name: 'home'});
+        return;
+      }
 
-    const {sort} = vm.$route.query;
+      const {sort} = vm.$route.query;
 
-    vm.sort = sort === '1' || sort === '2' ? sort : '1';
+      vm.sort = sort === '1' || sort === '2' ? sort : '1';
 
-    vm.song = docSnapshot.data();
-    vm.getComments();
-    })
-    
+      vm.song = docSnapshot.data();
+      vm.getComments();
+    });
   },
   methods: {
     ...mapActions(usePlayerStore, ['newSong']),

@@ -31,8 +31,8 @@
   </main>
 </template>
 <script>
-import AppUpload from '../components/AppUpload.vue';
-import CompositionItem from '../components/CompositionItem.vue';
+import AppUpload from '@/components/AppUpload.vue';
+import CompositionItem from '@/components/CompositionItem.vue';
 import {auth} from '@/includes/firebase';
 import {
   collection,

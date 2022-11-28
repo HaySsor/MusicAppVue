@@ -14,7 +14,9 @@
         <ul class="flex flex-row mt-1">
           <!-- Navigation Links -->
           <li>
-            <router-link :to="{name: 'about'}" class="px-2 text-white">About</router-link>
+            <router-link :to="{name: 'about'}" class="px-2 text-white"
+              >About</router-link
+            >
           </li>
           <li v-if="!userStore.userLoggedIn">
             <a class="px-2 text-white" href="#" @click.prevent="toggleAuthModal"
@@ -23,10 +25,7 @@
           </li>
           <template v-else>
             <li>
-              <a
-                class="px-2 text-white"
-                href="#"
-                @click.prevent="singOut"
+              <a class="px-2 text-white" href="#" @click.prevent="singOut"
                 >Logout</a
               >
             </li>
@@ -40,7 +39,7 @@
         <ul class="ml-auto">
           <li>
             <a class="px-2 text-white" href="#" @click.prevent="changeLocale">
-              {{currentLocale}}
+              {{ currentLocale }}
             </a>
           </li>
         </ul>
@@ -59,25 +58,25 @@ export default {
   computed: {
     // mapuje się po wszystkich wartościach tu np Store  i po . uzyskuje się wartość do danego parametru
     ...mapStores(useModalStore, useUserStore),
-    currentLocale(){
-      return this.$i18n.locale === 'pl' ? "Poland" : "English"
-    }
+    currentLocale() {
+      return this.$i18n.locale === 'pl' ? 'Poland' : 'English';
+    },
   },
   methods: {
     toggleAuthModal() {
       //  w this.modalStore ( modal jest to nazwa ta sama co w plikus store defineStore("modal"....))
       this.modalStore.isOpen = !this.modalStore.isOpen;
     },
-    singOut(){
+    singOut() {
       this.userStore.singOutUser();
-      
-      if(this.$route.meta.requiresAuth){
-        this.$router.push({name:'home'})
+
+      if (this.$route.meta.requiresAuth) {
+        this.$router.push({name: 'home'});
       }
     },
-    changeLocale(){
-      this.$i18n.locale = this.$i18n.locale === "pl" ? "en" : 'pl'
-    }
+    changeLocale() {
+      this.$i18n.locale = this.$i18n.locale === 'pl' ? 'en' : 'pl';
+    },
   },
 };
 </script>
